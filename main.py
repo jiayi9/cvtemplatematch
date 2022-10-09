@@ -71,9 +71,13 @@ if __name__ == '__main__':
 
     # factors: method, n, template, raw
 
-    home_folder = "C:/Temp/roi_study_result"
-    template_folder = "C:/Temp/roi_study/blister_front/roi_template"
-    image_folder = "C:/Temp/roi_study/blister_front/normal_raw"
+    # home_folder = "C:/Temp/roi_study_result/blister"
+    # template_folder = "C:/Temp/roi_study/blister_front/roi_template"
+    # image_folder = "C:/Temp/roi_study/blister_front/normal_raw"
+
+    home_folder = "C:/Temp/roi_study_result/carton_ocr"
+    template_folder = "C:/Temp/roi_study/carton_ocr/roi_template"
+    image_folder = "C:/Temp/roi_study/carton_ocr/normal_raw"
 
     method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
                     'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
@@ -81,7 +85,7 @@ if __name__ == '__main__':
     resizing_factors = (1, 2, 3, 4, 8, 16, 32, 64, 128)
 
     # use part of the images
-    roi_templates = list_files_recur(template_folder)[0][0:1]
+    roi_templates = list_files_recur(template_folder)[0]
     normal_raw_imgs = list_files_recur(image_folder)[0]
 
     L = []
@@ -129,6 +133,8 @@ if __name__ == '__main__':
                     row = {
                         'method': method_name,
                         'n': n,
+                        'template': Path(template_path).stem,
+                        'image': Path(raw_image_path).stem,
 
                         'color_resize_time_image': resize_time_1,
                         'color_resize_time_template': resize_time_2,
