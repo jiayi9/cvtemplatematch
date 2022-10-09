@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import pandas as pd
 from time import time
+from tqdm import tqdm
 
 
 def list_files_recur(path: str, fmt: str = ".bmp"):
@@ -71,14 +72,17 @@ if __name__ == '__main__':
     # factors: method, n, template, raw
 
     home_folder = "C:/Temp/roi_study_result"
+    template_folder = "C:/Temp/roi_study/blister_front/roi_template"
+    image_folder = "C:/Temp/roi_study/blister_front/normal_raw"
 
     method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
                     'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
 
-    resizing_factors = (1, 2, 3, 4, 8, 16, 32)
+    resizing_factors = (1, 2, 3, 4, 8, 16, 32, 64, 128)
 
-    roi_templates = list_files_recur("C:/Temp/roi_study/blister_front/roi_template")[0][0:1]
-    normal_raw_imgs = list_files_recur("C:/Temp/roi_study/blister_front/normal_raw")[0][0:5]
+    # use part of the images
+    roi_templates = list_files_recur(template_folder)[0][0:1]
+    normal_raw_imgs = list_files_recur(image_folder)[0]
 
     L = []
 
@@ -99,8 +103,10 @@ if __name__ == '__main__':
 
                 template = cv.imread(template_path)
 
+                print(method_name, n)
+
                 # loop over raw images
-                for raw_image_idx, raw_image_path in enumerate(normal_raw_imgs):
+                for raw_image_idx, raw_image_path in enumerate(tqdm(normal_raw_imgs)):
 
                     # color images
                     img = cv.imread(raw_image_path)
@@ -135,7 +141,7 @@ if __name__ == '__main__':
                         'gray_resize_time_image': resize_time_1_gray,
                         'gray_resize_time_template': resize_time_2_gray,
                         'gray_match_time': match_time_gray,
-                        'gray_total_time': match_time_gray + resize_time_1_gray + resize_time_2_gray
+                        'gray_total_time': match_time_gray + resize_time_1_gray + resize_time_2_gray,
                         'gray_x': top_left_gray[0],
                         'gray_y': top_left_gray[1],
                     }
