@@ -20,10 +20,10 @@ def list_files_recur(path: str, fmt: str = ".bmp"):
 
 
 def resize_image(image: np.ndarray, n: int):
+    """ resize and time """
     _start = time()
     resized_image = cv.resize(image, (int(image.shape[1]/n), int(image.shape[0]/n)))
     run_time = time() - _start
-    print(run_time)
     return resized_image, run_time
 
 
@@ -66,91 +66,80 @@ def add_roi_rect(img, top_left, shape):
     return img
 
 
-# method -> n -> template -> raw
+if __name__ == '__main__':
 
-home_folder = "C:/Temp/roi_study_result"
+    # factors: method, n, template, raw
 
-method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
-                'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
+    home_folder = "C:/Temp/roi_study_result"
 
-resizing_factors = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
+                    'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
 
-roi_templates = list_files_recur("C:/Temp/roi_study/blister_front/roi_template")[0]
-normal_raw_imgs = list_files_recur("C:/Temp/roi_study/blister_front/normal_raw")[0]
+    resizing_factors = (1, 2, 3, 4, 8, 16, 32)
 
+    roi_templates = list_files_recur("C:/Temp/roi_study/blister_front/roi_template")[0][0:1]
+    normal_raw_imgs = list_files_recur("C:/Temp/roi_study/blister_front/normal_raw")[0][0:5]
 
-#resizing_factors = (2,1)
-#method_names = ['cv.TM_CCOEFF']
+    L = []
 
-# method, n, template, raw_image, ->
-# resizing_time_1, resizing_time_2, color_find_time, color_x, color_y, gray_find_time, gray_x, gray_y
+    # loop over methods
+    for method_name in method_names:
 
-L = []
+        os.makedirs(os.path.join(home_folder, method_name), exist_ok=True)
 
-for method_name in method_names:
+        # loop over resizing factors
+        for n in resizing_factors:
 
-    os.makedirs(os.path.join(home_folder, method_name), exist_ok=True)
+            os.makedirs(os.path.join(home_folder, method_name, str(n)), exist_ok=True)
 
-    for n in resizing_factors:
+            # loop over multiple ROI templates
+            for template_idx, template_path in enumerate(roi_templates):
 
-        os.makedirs(os.path.join(home_folder, method_name, str(n)), exist_ok=True)
+                os.makedirs(os.path.join(home_folder, method_name, str(n), Path(template_path).stem), exist_ok=True)
 
-        for template_idx, template_path in enumerate(roi_templates[0:1]):
+                template = cv.imread(template_path)
 
-            os.makedirs(os.path.join(home_folder, method_name, str(n), Path(template_path).stem), exist_ok=True)
+                # loop over raw images
+                for raw_image_idx, raw_image_path in enumerate(normal_raw_imgs):
 
-            template = cv.imread(template_path)
+                    # color images
+                    img = cv.imread(raw_image_path)
+                    top_left, match_time, resize_time_1, resize_time_2 = find_reference_point(img, template, n, method_name)
+                    image_with_roi = add_roi_rect(img, top_left, template.shape)
+                    save_path = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + ".png")
+                    cv.imwrite(save_path, image_with_roi)
 
-            for raw_image_idx, raw_image_path in enumerate(normal_raw_imgs[0:5]):
+                    # grayscale images
+                    _start = time()
+                    img_gray = img[:, :, 0]
+                    template_gray = template[:, :, 0]
+                    gray_time = time() - _start
+                    top_left_gray, match_time_gray, resize_time_1_gray, resize_time_2_gray = find_reference_point(img_gray, template_gray, n, method_name)
+                    image_with_roi_gray = add_roi_rect(img_gray, top_left_gray, template_gray.shape)
+                    save_path_gray = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + "_gray.png")
+                    cv.imwrite(save_path_gray, image_with_roi_gray)
 
-                # color
-                img = cv.imread(raw_image_path)
+                    # save information
+                    row = {
+                        'method': method_name,
+                        'n': n,
 
-                top_left, match_time, resize_time_1, resize_time_2 = find_reference_point(img, template, n, method_name)
-                image_with_roi = add_roi_rect(img, top_left, template.shape)
-                save_path = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + ".png")
-                cv.imwrite(save_path, image_with_roi)
+                        'color_resize_time_image': resize_time_1,
+                        'color_resize_time_template': resize_time_2,
+                        'color_match_time': match_time,
+                        'color_total_time': match_time + resize_time_1 + resize_time_2,
+                        'color_x': top_left[0],
+                        'color_y': top_left[1],
 
-                # gray scale
-                _start = time()
-                img_gray = img[:, :, 0]
-                template_gray = template[:, :, 0]
-                gray_time = time() - _start
+                        'gray': gray_time,
+                        'gray_resize_time_image': resize_time_1_gray,
+                        'gray_resize_time_template': resize_time_2_gray,
+                        'gray_match_time': match_time_gray,
+                        'gray_total_time': match_time_gray + resize_time_1_gray + resize_time_2_gray
+                        'gray_x': top_left_gray[0],
+                        'gray_y': top_left_gray[1],
+                    }
+                    L.append(row)
 
-                top_left_gray, match_time_gray, resize_time_1_gray, resize_time_2_gray = find_reference_point(img_gray, template_gray, n, method_name)
-                image_with_roi_gray = add_roi_rect(img_gray, top_left_gray, template_gray.shape)
-                save_path_gray = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + "_gray.png")
-                cv.imwrite(save_path_gray, image_with_roi_gray)
-
-                # save information
-                L.append({
-                    'method': method_name,
-                    'n': n,
-
-                    'match_time': match_time,
-                    'resize_time_1': resize_time_1,
-                    'resize_time_2': resize_time_2,
-                    'x': top_left[0],
-                    'y': top_left[1],
-                    'total_time_color': match_time + resize_time_1 + resize_time_2,
-
-                    'gray': gray_time,
-
-                    'match_time_gray': match_time_gray,
-                    'resize_time_1_gray': resize_time_1_gray,
-                    'resize_time_2_gray': resize_time_2_gray,
-                    'x_gray': top_left_gray[0],
-                    'y_gray': top_left_gray[1],
-
-                    'total_time_gray': match_time_gray + resize_time_1_gray + resize_time_2_gray
-                })
-
-
-
-                #
-                # print(method_name, n,
-                #       match_time, resize_time_1, resize_time_2, top_left[0], top_left[1] ,"    |   ",  gray_time,
-                #       match_time_gray, resize_time_1_gray, resize_time_2_gray, top_left_gray[0], top_left_gray[1])
-
-df = pd.DataFrame(L)
-df.to_csv(os.path.join(home_folder, "summary.csv"), index=False)
+    df = pd.DataFrame(L)
+    df.to_csv(os.path.join(home_folder, "summary.csv"), index=False)
