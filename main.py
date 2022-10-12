@@ -46,11 +46,13 @@ def find_reference_point(img: np.ndarray, template: np.ndarray, n:int = 1, metho
     # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
     if method in [cv.TM_SQDIFF, cv.TM_SQDIFF_NORMED]:
         top_left = min_loc
+        optimal_score = min_val
     else:
         top_left = max_loc
+        optimal_score = max_val
     # bottom_right = (top_left[0] + w, top_left[1] + h)
     top_left = [x*n for x in top_left]
-    return top_left, run_time, resize_image_run_time, resize_template_run_time
+    return top_left, run_time, resize_image_run_time, resize_template_run_time, optimal_score
 
 
 def add_roi_rect(img, top_left, shape):
@@ -91,16 +93,16 @@ if __name__ == '__main__':
     # template_folder = "C:/Temp/roi_study/blister_front/ocr_roi_template"
     # image_folder = "C:/Temp/roi_study/blister_front/roi_template"
 
-    method_names = ['cv.TM_CCOEFF']
+    #method_names = ['cv.TM_CCOEFF']
 
-    # method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
-    #                 'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
+    method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
+                     'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
 
-    resizing_factors = (1, 2, 3, 4, 8, 16, 32, 64)
+    resizing_factors = (1, 2, 4, 8, 16, 32, 64)
 
     # use part of the images
-    roi_templates = list_files_recur(template_folder)[0][0:1]
-    normal_raw_imgs = list_files_recur(image_folder)[0][0:20]
+    roi_templates = list_files_recur(template_folder)[0][0:3]
+    normal_raw_imgs = list_files_recur(image_folder)[0][0:15]
 
     L = []
 
@@ -128,20 +130,20 @@ if __name__ == '__main__':
 
                     # color images
                     img = cv.imread(raw_image_path)
-                    top_left, match_time, resize_time_1, resize_time_2 = find_reference_point(img, template, n, method_name)
-                    image_with_roi = add_roi_rect(img, top_left, template.shape)
-                    save_path = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + ".png")
-                    cv.imwrite(save_path, image_with_roi)
+                    top_left, match_time, resize_time_1, resize_time_2, optimal_score = find_reference_point(img, template, n, method_name)
+                    #image_with_roi = add_roi_rect(img, top_left, template.shape)
+                    #save_path = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + ".png")
+                    #cv.imwrite(save_path, image_with_roi)
 
                     # grayscale images
                     _start = time()
                     img_gray = img[:, :, 0]
                     template_gray = template[:, :, 0]
                     gray_time = time() - _start
-                    top_left_gray, match_time_gray, resize_time_1_gray, resize_time_2_gray = find_reference_point(img_gray, template_gray, n, method_name)
-                    image_with_roi_gray = add_roi_rect(img_gray, top_left_gray, template_gray.shape)
-                    save_path_gray = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + "_gray.png")
-                    cv.imwrite(save_path_gray, image_with_roi_gray)
+                    top_left_gray, match_time_gray, resize_time_1_gray, resize_time_2_gray, optimal_score_gray = find_reference_point(img_gray, template_gray, n, method_name)
+                    #image_with_roi_gray = add_roi_rect(img_gray, top_left_gray, template_gray.shape)
+                    #save_path_gray = os.path.join(home_folder, method_name, str(n), Path(template_path).stem, Path(raw_image_path).stem + "_gray.png")
+                    #cv.imwrite(save_path_gray, image_with_roi_gray)
 
                     # save information
                     row = {
@@ -156,6 +158,7 @@ if __name__ == '__main__':
                         'color_total_time': match_time + resize_time_1 + resize_time_2,
                         'color_x': top_left[0],
                         'color_y': top_left[1],
+                        'optimal_score': optimal_score,
 
                         'gray': gray_time,
                         'gray_resize_time_image': resize_time_1_gray,
@@ -164,6 +167,7 @@ if __name__ == '__main__':
                         'gray_total_time': match_time_gray + resize_time_1_gray + resize_time_2_gray,
                         'gray_x': top_left_gray[0],
                         'gray_y': top_left_gray[1],
+                        'optimal_score_gray': optimal_score_gray
                     }
                     L.append(row)
 
