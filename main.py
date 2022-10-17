@@ -74,14 +74,14 @@ if __name__ == '__main__':
     # factors: method, n, template, raw
 
     # Blister from raw blister
-    home_folder = "C:/Temp/roi_study_result/blister"
-    template_folder = "C:/Temp/roi_study/blister_front/roi_template"
-    image_folder = "C:/Temp/roi_study/blister_front/normal_raw"
+    # home_folder = "C:/Temp/roi_study_result/blister"
+    # template_folder = "C:/Temp/roi_study/blister_front/roi_template"
+    # image_folder = "C:/Temp/roi_study/blister_front/normal_raw"
 
     # Emblossing from carton side
-    # home_folder = "C:/Temp/roi_study_result/carton_ocr"
-    # template_folder = "C:/Temp/roi_study/carton_ocr/roi_template"
-    # image_folder = "C:/Temp/roi_study/carton_ocr/normal_raw"
+    home_folder = "C:/Temp/roi_study_result/carton_ocr"
+    template_folder = "C:/Temp/roi_study/carton_ocr/roi_template"
+    image_folder = "C:/Temp/roi_study/carton_ocr/normal_raw"
 
     # OCR from blister raw
     # home_folder = "C:/Temp/roi_study_result/blister_ocr"
@@ -98,11 +98,11 @@ if __name__ == '__main__':
     method_names = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
                      'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
 
-    resizing_factors = (1, 2, 4, 8, 16, 32, 64)
+    resizing_factors = (1, 2, 4, 8, 16, 32, 64, 128)
 
     # use part of the images
-    roi_templates = list_files_recur(template_folder)[0][0:3]
-    normal_raw_imgs = list_files_recur(image_folder)[0][0:15]
+    roi_templates = list_files_recur(template_folder)[0][0:5]
+    normal_raw_imgs = list_files_recur(image_folder)[0][0:20]
 
     L = []
 
