@@ -16,19 +16,6 @@ good_normal_images = list_files_recur(good_image_folder)[0]
 
 angles = [5, 10, 15, 20, 30, 45, 60, 90]
 
-###########################################################################################
-##generate rotated images
-
-# for angle in angles:
-#     path = "C:/Temp/roi_study/blister_front/normal_raw_rotate/rotate_" + str(angle)
-#     os.makedirs(path, exist_ok=True)
-#
-#     for idx, img_path in enumerate(good_normal_images[0:25]):
-#         img = Image.open(img_path)
-#         rotate_img = img.rotate(angle)
-#         output_path = os.path.join(path, Path(img_path).stem + "_" + str(angle) + ".png")
-#         rotate_img.save(output_path)
-
 ###################################################################################################################
 
 
@@ -54,20 +41,13 @@ for method_name in method_names:
             template = cv.imread(template_path)
 
             # normal images
-            for path in good_normal_images:
+            for path in good_normal_images[0:1]:
                 img = cv.imread(path)
-                _, _, _, _, optimal_score = find_reference_point(img, template, n, method_name)
-
-                # save information
-                row = {
-                    'method': method_name,
-                    'n': n,
-                    'angle': 0,
-                    'template': Path(template_path).stem,
-                    'image': Path(path).stem,
-                    'optimal_score': optimal_score
-                }
-                L.append(row)
+                top_left, match_time, resize_time_1, resize_time_2, optimal_score = \
+                    find_reference_point(img, template, n, method_name)
+                image_with_roi = add_roi_rect(img, top_left, template.shape, linewidth=12)
+                save_path = os.path.join(home_folder, f"0_" + ".png")
+                cv.imwrite(save_path, image_with_roi)
 
             # rotated image folders
             for angle in angles:
@@ -75,22 +55,12 @@ for method_name in method_names:
                 angle_group = "C:/Temp/roi_study/blister_front/normal_raw_rotate/rotate_" + str(angle)
                 img_path_list = list_files_recur(angle_group, 'png')[0]
                 print(angle_group)
-                for path in img_path_list:
+                for path in img_path_list[0:1]:
                     img = cv.imread(path)
-                    _, _, _, _, optimal_score = find_reference_point(img, template, n, method_name)
+                    top_left, match_time, resize_time_1, resize_time_2, optimal_score = \
+                        find_reference_point(img, template, n, method_name)
+                    image_with_roi = add_roi_rect(img, top_left, template.shape, linewidth=12)
 
-                    # save information
-                    row = {
-                        'method': method_name,
-                        'n': n,
-                        'angle': angle,
-                        'template': Path(template_path).stem,
-                        'image': Path(path).stem,
-                        'optimal_score': optimal_score
-                    }
-                    L.append(row)
+                    save_path = os.path.join(home_folder,  f"{angle}_" + ".png")
 
-
-df = pd.DataFrame(L)
-home_folder = "C:/Temp/roi_study/blister_front"
-df.to_csv(os.path.join(home_folder, "blister_rotation_summary.csv"), index=False)
+                    cv.imwrite(save_path, image_with_roi)

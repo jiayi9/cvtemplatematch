@@ -55,16 +55,16 @@ def find_reference_point(img: np.ndarray, template: np.ndarray, n:int = 1, metho
     return top_left, run_time, resize_image_run_time, resize_template_run_time, optimal_score
 
 
-def add_roi_rect(img, top_left, shape):
+def add_roi_rect(img, top_left, shape, linewidth = 8):
     """ Add a rectangle for ROI """
     h, w = shape[0:2]
     bottom_right = (top_left[0] + w, top_left[1] + h)
     if len(img.shape) == 3:
-        cv.rectangle(img, top_left, bottom_right, (0, 0, 255), 8) #bgr
+        cv.rectangle(img, top_left, bottom_right, (0, 0, 255), linewidth) #bgr
     else:
         # need the following line to solve this bug
         img = np.array(img)
-        cv.rectangle(img, top_left, bottom_right, 255, 8)
+        cv.rectangle(img, top_left, bottom_right, 255, linewidth)
 
     return img
 
